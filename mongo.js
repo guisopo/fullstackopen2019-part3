@@ -19,13 +19,16 @@ const contactSchema = new mongoose.Schema({
 const Contact = mongoose.model('Contact', contactSchema)
 
 if(process.argv.length === 3) {
-  return Contact.find({}).then(contacts => {
-    console.log('phonebook:')
-    contacts.forEach(contact => {
-      console.log(`${contact.name} ${contact.phone}`)
-    });
-    mongoose.connection.close()
+  Contact
+    .find({})
+    .then(contacts => {
+      console.log('phonebook:')
+      contacts.forEach(contact => {
+        console.log(`${contact.name} ${contact.phone}`)
+      });
+      mongoose.connection.close()
   })
+  return
 }
 
 const contactName = process.argv[3]
