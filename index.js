@@ -1,40 +1,15 @@
+require('dotenv').config()
+
 const express = require('express')
 const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
-const Contact = require('mongo')
 const app = express()
+const Contact = require('./models/contact')
+
 app.use(bodyParser.json())
 app.use(cors())
 app.use(express.static('build'))
-
-let persons = [
-  {
-    id: 1,
-    name: "Guillermo",
-    phone: "1234567"
-  },
-  {
-    id: 2,
-    name: "Paco",
-    phone: "1234567"
-  },
-  {
-    id: 3,
-    name: "Pablo",
-    phone: "5435344"
-  },
-  {
-    id: 4,
-    name: "María",
-    phone: "5432453"
-  },
-  {
-    id: 5,
-    name: "Sara",
-    phone: "25345435"
-  }
-]
 
 //============
 // MIDDLEWARE
@@ -64,18 +39,6 @@ app.use(morgan(loggerFormat, {
   stream: process.stdout
 }));
 
-//=========
-// HELPERS
-
-const generateRandomId = () => {
-  const randomId = Math.ceil(Math.random() * 1000)
-  if (persons.find(p => p.id === randomId)) {
-    return generateRandomId()
-  } else {
-    return randomId
-  }
-}
-
 //==========
 // REST API
 
@@ -91,59 +54,33 @@ app.get('/info', (req, res) => {
 })
 
 app.get('/api/persons', (req, res) => {
-  res.json(persons)
+  Contact.find({}).then(contacts => {
+    res.json(contacts.map(contact => contact.toJSON()))
+  })
 })
 
 app.get('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id)
-  const person = persons.find(p => p.id === id)
-  if(person) {
-    res.json(person)
-  } else {
-    res.status(400).end()
-  }
+  Contact.findById(req.params.id).then(contact => {
+    res.json(contact.toJSON())
+  })
 })
 
 app.post('/api/persons', (req, res) => {
   const body = req.body
 
-  if(!body.name) {
-    if(!body.phone) {
-      return res.status(400).json({
-        error: 'Name and phone missing.'
-      })
-    }
-    return res.status(400).json({
-      error: 'Name missing.'
-    })
-  }
-
-  if(!body.phone) {
-    return res.status(400).json({
-      error: 'Phone missing.'
-    })
-  }
-
-  if (persons.find(p => p.name === body.name)) {
-    return res.status(409).json({
-      error: 'Name already taken. Must be unique.'
-    })
-  }
-
-  const person = {
-    id : generateRandomId(),
+  const person = new Contact({
     name: body.name,
-    phone: body.phone
-  }
+    phone: body.number
+  })
 
-  persons.concat(person)
-
-  res.json(person)
+  person.save().then(savedPerson => {
+    res.json(savedPerson.toJSON())
+  })
 })
 
 app.delete('/api/persons/:id', (req, res) => {
   const id = Number(req.params.id)
-  persons = persons.filter(p => p.id !== id)
+  Contact.findById(id).remove()
   res.status(204).end()
 })
 
