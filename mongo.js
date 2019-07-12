@@ -1,44 +1,26 @@
 const mongoose = require('mongoose')
 
-if(process.argv.length < 3) {
-  console.log('You forgot to write the password')
-}
-
-const dbName = 'phonebook'
-const password = process.argv[2]
-
-const url = `mongodb+srv://fullstack:${password}@cluster0-mtrnz.mongodb.net/${dbName}?retryWrites=true&w=majority`
+const url = process.env.MONGODB_URI
 
 mongoose.connect( url, {useNewUrlParser: true})
+  .then(result => {
+    console.log('connected to MongoDB')
+  })
+  .catch(error => {
+    console.log('error connecting to MongoDB', error.message)
+  })
 
 const contactSchema = new mongoose.Schema({
   name: String,
   phone: Number
 })
 
-const Contact = mongoose.model('Contact', contactSchema)
-
-if(process.argv.length === 3) {
-  Contact
-    .find({})
-    .then(contacts => {
-      console.log('phonebook:')
-      contacts.forEach(contact => {
-        console.log(`${contact.name} ${contact.phone}`)
-      });
-      mongoose.connection.close()
-  })
-  return
-}
-
-const contactName = process.argv[3]
-const contactPhone = process.argv[4]
-const contact = new Contact({
-  name: contactName,
-  phone: contactPhone
+contactSchema.set('toJSON', {
+  transform: (document, returnedObject) => {
+    returnedObject.id = returnedObject._id.toString()
+    delete returnedObject._id
+    delete returnedObject.__v
+  }
 })
 
-contact.save().then(response => {
-  console.log(`Added ${contactName} number ${contactPhone} to phonebook`)
-  mongoose.connection.close()
-})
+module.exports = mongoose.model('Contact', contactSchema)
