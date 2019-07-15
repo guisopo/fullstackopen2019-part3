@@ -47,18 +47,20 @@ app.get('/', (req, res) => {
 })
 
 app.get('/info', (req, res) => {
-  Contact.find({}).then( result => {
-    res.send(`
-      <p>Phonebook has info for ${result.length} people</p>
-      <p>${new Date()}</p>
-    `)
-  })
+  Contact.find({})
+    .then( result => {
+      res.send(`
+        <p>Phonebook has info for ${result.length} people</p>
+        <p>${new Date()}</p>
+      `)
+    })
 })
 
 app.get('/api/persons', (req, res, next) => {
-  Contact.find({}).then(contacts => {
-    res.json(contacts.map(contact => contact.toJSON()))
-  })
+  Contact.find({})
+    .then(contacts => {
+      res.json(contacts.map(contact => contact.toJSON()))
+    })
 })
 
 app.get('/api/persons/:id', (req, res, next) => {
