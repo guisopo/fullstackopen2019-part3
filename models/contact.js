@@ -1,5 +1,7 @@
 const mongoose = require('mongoose')
 
+mongoose.set('useFindAndModify', false)
+
 const url = process.env.MONGODB_URI
 
 mongoose.connect( url, {useNewUrlParser: true})
@@ -12,7 +14,7 @@ mongoose.connect( url, {useNewUrlParser: true})
 
 const contactSchema = new mongoose.Schema({
   name: String,
-  number: Number
+  number: String
 })
 
 contactSchema.set('toJSON', {
