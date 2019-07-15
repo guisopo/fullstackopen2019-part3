@@ -94,7 +94,7 @@ app.put('/api/persons/:id', (req, res, next) => {
   }
   Contact.findByIdAndUpdate(req.params.id, person, { new: true })
     .then(updatedPerson => {
-      res.json(updatedPerson.toJSON)
+      res.json(updatedPerson.toJSON())
     })
     .catch(error => next(error))
 })
