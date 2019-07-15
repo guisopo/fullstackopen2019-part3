@@ -76,7 +76,7 @@ app.post('/api/persons', (req, res) => {
 
   const person = new Contact({
     name: body.name,
-    phone: body.number
+    number: body.number
   })
 
   person.save()
@@ -90,7 +90,7 @@ app.put('/api/persons/:id', (req, res, next) => {
   const body = req.body;
   const person = {
     name: body.name,
-    phone: body.number
+    number: body.number
   }
   Contact.findByIdAndUpdate(req.params.id, person, { new: true })
     .then(updatedPerson => {
