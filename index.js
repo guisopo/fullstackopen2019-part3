@@ -5,7 +5,7 @@ const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
 const app = express()
-const Contact = require('./models/contact')
+const Contact = require( './models/contact' )
 
 // Order matters
 app.use(bodyParser.json())
@@ -17,29 +17,29 @@ app.use(express.static('build'))
 
 const loggerFormat = ':method :url :status :res[content-length] - :response-time ms :person'
 
-morgan.token('person', function getInfo(req,res) {
+morgan.token('person', function getInfo(req) {
   if(req.method === 'POST') {
     return JSON.stringify(req.body)
   }
 
-  return ' ';
+  return ' '
 })
 
 app.use(morgan(loggerFormat, {
-  skip: 
+  skip:
   function (req, res) {
-      return res.statusCode < 400
+    return res.statusCode < 400
   },
   stream: process.stderr
-}));
+}))
 
 app.use(morgan(loggerFormat, {
-  skip: 
+  skip:
   function (req, res) {
-      return res.statusCode >= 400
+    return res.statusCode >= 400
   },
   stream: process.stdout
-}));
+}))
 
 //==========
 // REST API
@@ -59,7 +59,7 @@ app.get('/info', (req, res) => {
 })
 
 // Get Contact List
-app.get('/api/persons', (req, res, next) => {
+app.get('/api/persons', (req, res) => {
   Contact.find({})
     .then(contacts => contacts.map(contact => contact.toJSON()))
     .then(mappedContacts => res.json(mappedContacts))
@@ -97,7 +97,7 @@ app.post('/api/persons', (req, res, next) => {
 
 // Update Contact parameters
 app.put('/api/persons/:id', (req, res, next) => {
-  const body = req.body;
+  const body = req.body
 
   const person = {
     name: body.name,
@@ -119,23 +119,23 @@ app.delete('/api/persons/:id', (req, res, next) => {
     .catch(error => {
       next(error)
     })
-  })
-  
+})
+
 //==============
 // ERROR HANDLER
 
-const unknownEndpoint = (request, response) => {
-  response.status(404).send({ error: 'unknown endpoint' })
+const unknownEndpoint = (req, res) => {
+  res.status(404).send({ error: 'unknown endpoint' })
 }
 
 app.use(unknownEndpoint)
 
-const errorHandler = (error, request, response, next) => {
+const errorHandler = (error, req, res, next) => {
   if (error.name === 'CastError' && error.kind === 'ObjectId') {
-    return response.status(400).send({ error: 'Malformatted ID' })
-  } 
+    return res.status(400).send({ error: 'Malformatted ID' })
+  }
   else if (error.name === 'ValidationError') {
-    return response.status(400).json({ error: error.message })
+    return res.status(400).json({ error: error.message })
   }
   next(error)
 }
