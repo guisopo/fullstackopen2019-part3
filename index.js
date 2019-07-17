@@ -20,6 +20,7 @@ morgan.token('person', function getInfo(req,res) {
   if(req.method === 'POST') {
     return JSON.stringify(req.body)
   }
+
   return ' ';
 })
 
@@ -58,9 +59,8 @@ app.get('/info', (req, res) => {
 
 app.get('/api/persons', (req, res, next) => {
   Contact.find({})
-    .then(contacts => {
-      res.json(contacts.map(contact => contact.toJSON()))
-    })
+    .then(contacts => contacts.map(contact => contact.toJSON()))
+    .then(mappedContacts => res.json(mappedContacts))
 })
 
 app.get('/api/persons/:id', (req, res, next) => {
@@ -84,9 +84,8 @@ app.post('/api/persons', (req, res, next) => {
   })
 
   person.save()
-    .then(savedPerson => {
-      res.json(savedPerson.toJSON())
-    })
+    .then(savedPerson => savedPerson.toJSON())
+    .then(savedAndFormated => res.json(savedAndFormated))
     .catch(error => {
       next(error)
     })
@@ -94,45 +93,49 @@ app.post('/api/persons', (req, res, next) => {
 
 app.put('/api/persons/:id', (req, res, next) => {
   const body = req.body;
+
   const person = {
     name: body.name,
     number: body.number
   }
+
   Contact.findByIdAndUpdate(req.params.id, person, { new: true })
-    .then(updatedPerson => {
-      res.json(updatedPerson.toJSON())
+    .then(updatedPerson => updatedPerson.toJSON())
+    .then(updatedAndFormated => res.json(updatedAndFormated))
+    .catch(error => {
+      next(error)
     })
-    .catch(error => next(error))
 })
 
 app.delete('/api/persons/:id', (req, res, next) => {
   Contact.findByIdAndRemove(req.params.id)
-    .then(() => {
-      res.status(204).end()
-    })
+    .then(() => res.status(204).end())
     .catch(error => {
       next(error)
     })
   })
   
-  //==============
-  // ERROR HANDLER
-  
-  const unknownEndpoint = (request, response) => {
-    response.status(404).send({ error: 'unknown endpoint' })
+//==============
+// ERROR HANDLER
+
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: 'unknown endpoint' })
+}
+
+app.use(unknownEndpoint)
+
+const errorHandler = (error, request, response, next) => {
+  console.log(error)
+  if (error.name === 'CastError' && error.kind === 'ObjectId') {
+    return response.status(400).send({ error: 'Malformatted ID' })
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
+  } else if ( error.name === 'MongoError' && error.codeName === 'DuplicateKey') {
+    return response.status(400).json({ error: 'The number was already added to another contact. It must be unique.' })
   }
-  
-  app.use(unknownEndpoint)
-  
-  const errorHandler = (error, request, response, next) => {
-    if (error.name === 'CastError' && error.kind === 'ObjectId') {
-      return response.status(400).send({ error: 'Malformatted ID' })
-    } if (error.kind === 'ValidationError') {
-      return response.status(400).json({ error: error.message })
-    }
-    
-    next(error)
-  }
+  next(error)
+}
+
 app.use(errorHandler)
 
 //==============
