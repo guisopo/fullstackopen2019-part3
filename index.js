@@ -7,6 +7,7 @@ const cors = require('cors')
 const app = express()
 const Contact = require('./models/contact')
 
+// Order matters
 app.use(bodyParser.json())
 app.use(cors())
 app.use(express.static('build'))
@@ -57,12 +58,14 @@ app.get('/info', (req, res) => {
     })
 })
 
+// Get Contact List
 app.get('/api/persons', (req, res, next) => {
   Contact.find({})
     .then(contacts => contacts.map(contact => contact.toJSON()))
     .then(mappedContacts => res.json(mappedContacts))
 })
 
+// Get single Contact
 app.get('/api/persons/:id', (req, res, next) => {
   Contact.findById(req.params.id)
     .then(contact => {
@@ -75,6 +78,7 @@ app.get('/api/persons/:id', (req, res, next) => {
     .catch(error => next(error))
 })
 
+// Add new Contact
 app.post('/api/persons', (req, res, next) => {
   const body = req.body
 
@@ -91,6 +95,7 @@ app.post('/api/persons', (req, res, next) => {
     })
 })
 
+// Update Contact parameters
 app.put('/api/persons/:id', (req, res, next) => {
   const body = req.body;
 
@@ -99,7 +104,7 @@ app.put('/api/persons/:id', (req, res, next) => {
     number: body.number
   }
 
-  Contact.findByIdAndUpdate(req.params.id, person, { new: true })
+  Contact.findByIdAndUpdate(req.params.id, person, { new: true, runValidators: true, context: 'query' })
     .then(updatedPerson => updatedPerson.toJSON())
     .then(updatedAndFormated => res.json(updatedAndFormated))
     .catch(error => {
@@ -107,6 +112,7 @@ app.put('/api/persons/:id', (req, res, next) => {
     })
 })
 
+// Delete Contact
 app.delete('/api/persons/:id', (req, res, next) => {
   Contact.findByIdAndRemove(req.params.id)
     .then(() => res.status(204).end())
@@ -125,13 +131,11 @@ const unknownEndpoint = (request, response) => {
 app.use(unknownEndpoint)
 
 const errorHandler = (error, request, response, next) => {
-  console.log(error)
   if (error.name === 'CastError' && error.kind === 'ObjectId') {
     return response.status(400).send({ error: 'Malformatted ID' })
-  } else if (error.name === 'ValidationError') {
+  } 
+  else if (error.name === 'ValidationError') {
     return response.status(400).json({ error: error.message })
-  } else if ( error.name === 'MongoError' && error.codeName === 'DuplicateKey') {
-    return response.status(400).json({ error: 'The number was already added to another contact. It must be unique.' })
   }
   next(error)
 }
