@@ -87,7 +87,9 @@ app.post('/api/persons', (req, res, next) => {
     .then(savedPerson => {
       res.json(savedPerson.toJSON())
     })
-    .catch(error => next(error))
+    .catch(error => {
+      next(error)
+    })
 })
 
 app.put('/api/persons/:id', (req, res, next) => {
@@ -108,25 +110,29 @@ app.delete('/api/persons/:id', (req, res, next) => {
     .then(() => {
       res.status(204).end()
     })
-    .catch(error => next(error))
-})
-
-//==============
-// ERROR HANDLER
-
-const unknownEndpoint = (request, response) => {
-  response.status(404).send({ error: 'unknown endpoint' })
-}
-
-app.use(unknownEndpoint)
-
-const errorHandler = (error, request, response, next) => {
-  if (error.name === 'CastError' && error.kind === 'ObjectId') {
-    return response.status(400).send({ error: 'Malformatted ID' })
+    .catch(error => {
+      next(error)
+    })
+  })
+  
+  //==============
+  // ERROR HANDLER
+  
+  const unknownEndpoint = (request, response) => {
+    response.status(404).send({ error: 'unknown endpoint' })
   }
-  next(error)
-}
-
+  
+  app.use(unknownEndpoint)
+  
+  const errorHandler = (error, request, response, next) => {
+    if (error.name === 'CastError' && error.kind === 'ObjectId') {
+      return response.status(400).send({ error: 'Malformatted ID' })
+    } if (error.kind === 'ValidationError') {
+      return response.status(400).json({ error: error.message })
+    }
+    
+    next(error)
+  }
 app.use(errorHandler)
 
 //==============

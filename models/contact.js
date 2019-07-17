@@ -17,14 +17,14 @@ const contactSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    minlength: 3,
-    unique: true
+    unique: true,
+    minlength: 3
   },
   number: {
     type: String,
     required: true,
-    minlength: 8,
-    unique: true
+    unique: true,
+    minlength: 8
   },
 })
 
