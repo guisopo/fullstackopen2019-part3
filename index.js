@@ -26,18 +26,12 @@ morgan.token('person', function getInfo(req) {
 })
 
 app.use(morgan(loggerFormat, {
-  skip:
-  function (req, res) {
-    return res.statusCode < 400
-  },
+  skip: (req, res) =>  res.statusCode < 400,
   stream: process.stderr
 }))
 
 app.use(morgan(loggerFormat, {
-  skip:
-  function (req, res) {
-    return res.statusCode >= 400
-  },
+  skip: (req, res) => res.statusCode >= 400,
   stream: process.stdout
 }))
 
